@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>ComBot+++</title>
+<style>
+body { font-family: Arial, sans-serif; background: #ffeef7; margin:0; height:100vh; display:flex; flex-direction:column;}
+#courseZone {background:white; padding:20px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+#courseZone h1 {margin-bottom:10px;}
+#courseSelect {padding:10px; border-radius:10px; border:1px solid #ccc; font-size:16px; margin-right:10px;}
+#startBtn, #finishBtn, .optionBtn {padding:10px 16px; border-radius:10px; border:none; cursor:pointer; margin:4px; font-weight:bold;}
+#startBtn {background:#4f46e5; color:white;}
+#finishBtn {background:#10b981; color:white;}
+.optionBtn {
+  background:#f9c0d3; color:white; min-width:140px; text-align:center; 
+  transition: 0.3s; border-radius:12px;
+}
+.optionBtn:hover {background:#f78fb3; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2);}
+#score {text-align:center; font-weight:bold; padding:10px;}
+#chat {flex:1; padding:10px; overflow-y:auto; display:flex; flex-direction:column; align-items:center;}
+.message {max-width:65%; margin:6px; padding:10px; border-radius:14px; white-space:pre-line;}
+.bot {background:#4f46e5; color:white; align-self:flex-start;}
+.user {background:#e5e7eb; align-self:flex-end;}
+#optionsContainer {display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin:10px 0;}
+#inputArea {display:flex; padding:10px; background:white; justify-content:center; flex-wrap:wrap;}
+#inputArea input {flex:1; padding:10px; border-radius:10px; border:1px solid #ccc; margin-right:5px; min-width:180px;}
+</style>
+</head>
+<body>
+
+<div id="courseZone">
+<h1>🎓 Révisions – Partiels de Com</h1>
+<p>Choisis un cours 👇</p>
+<select id="courseSelect">
+  <option value="">-- Choisis un cours --</option>
+  <option value="Fondamentaux">Fondamentaux</option>
+  <option value="Générateur de règlement">Générateur de règlement</option>
+  <option value="Le diagnostic de l'annonceur et de sa communication">Le diagnostic de l'annonceur et de sa communication</option>
+  <option value="La formulation du problème de communication de l'annonceur">La formulation du problème de communication de l'annonceur</option>
+  <option value="L'élaboration du cahier des charges">L'élaboration du cahier des charges</option>
+  <option value="La communication non marchande">La communication non marchande</option>
+  <option value="La prise en compte d’éléments stratégiques pour assurer le pilotage">La prise en compte d’éléments stratégiques pour assurer le pilotage</option>
+  <option value="La mise en œuvre des moyens propres à la communication non marchande">La mise en œuvre des moyens propres à la communication non marchande</option>
+  <option value="La communication événementielle">La communication événementielle</option>
+  <option value="Les relations publiques et les relations presse">Les relations publiques et les relations presse</option>
+  <option value="Le communiqué et le dossier de presse">Le communiqué et le dossier de presse</option>
+  <option value="Les autres moyens de la communication événementielle">Les autres moyens de la communication événementielle</option>
+</select>
+<button id="startBtn" onclick="startCourse()">Commencer</button>
+</div>
+
+<div id="score"></div>
+<div id="chat"></div>
+<div id="optionsContainer"></div>
+
+<div id="inputArea">
+<input id="userInput" placeholder="Écris ta réponse..." />
+<button id="finishBtn" onclick="finishAnswer()">Terminer ✅</button>
+</div>
+
+<script>
+const courses = {
+ "Fondamentaux": [
+  { texte:"Quelle est la définition de la communication ?", keywords:["actions","message","cible"], options:["Ensemble d'action pour effectuer un message clé à une cible donnée.","Phrase construite pour positionner l'entreprise","Actions selon étude de marché","Support pour répondre à une question"], reponse:"Ensemble d'action pour effectuer un message clé à une cible donnée." },
+  { texte:"Quels sont les 3 types de communication dans la communication du secteur externe marchand?", keywords:["commerciale","corporate", "de firms","globale"], options:["Commerciale, corporate (de firms) et globale.","Associative, politique et sociale","Commerciale, associative et sociale.","Corporate, politique et globale."], reponse:"Commerciale, corporate (de firms) et globale." },
+  { texte:"Donnes moi des exemples de communication commerciale", keywords:["produits","services","marque", "promotionnelle", "B to B", "b to b"], options:["Associative, politique, institutions publiques, sociales.","Produits / service, de marque, promotionnelle, B to B.","B to B, politique, institutionnelle.","Financière, institutionnelle, de recrutement."], reponse:"Produits / service, de marque, promotionnelle, B to B." },
+  { texte:"Donnes des exemples de communication externe non marchande", keywords:["associative","politique","institutions publiques", "Grandes Causes", "sociale"], options:["Produits, marque, promotionnelle, B to B.","Associative, financière, promotionnelle","Associative, politique, institution publiques, sociales","Associative, politique, institution politiques, Grandes Causes / Sociales."], reponse:"Associative, politique, institution politiques, Grandes Causes / Sociales." },
+  { texte:"Donnes moi les 3 points clés de la communication interne", keywords:["cohésion","organisation","information", "informer"], options:["Cohésion, crédibilité, attractivité","Distinction, durabilité, attraction","Cohésion, organisation, information","Organisation, crédibilité, distinction."], reponse:"Cohésion, organisation, information" },
+  { texte:"Donnes moi les 2 acteurs de la communication", keywords:["agences de communication", "médias", "annonceurs"], options:["Annonceurs, agences de com / médias", "entreprise et cible", "privé et publiques","agences de com et cibles."], reponse:"Annonceurs et agences de com / médias" },
+  { texte:"En 4 mots comment doit être le positionnement", keywords:["durable", "attractif", "crédible", "distinctif"], options:["Produit, prix, place, promotion", "Lieu, âge, CSP, sexe", "Durable, attractif, crédible, distinctif", "Cognitif, affectif, conatifs et spécifique."], reponse:"Durable, attractif, crédible, distinctif" },
+  { texte:"Quand est donné le brief ?", keywords:["début"], options:["Début", "Fin"], reponse:"Début" }, 
+  { texte:"Quelle solution permet de donner les caractéristiques de la prod, les dimensions, la colorimétrie, le type de papier etc ?", keywords:["cahier des charges"], options:["Cahier des charges","Diagramme de Gantt","Projet de com."], reponse:"Cahier des charges" }
+],
+    "Générateur de règlement": [
+    { texte:" Le générateur de règlement permet d'évaluer quoi en un mot ?", keywords:["dépenses"], options:["Dépenses", "Structures", "Travail", "Temps"], reponse:"Il permet d'évaluer les sources des dépenses." },
+    { texte:"Qu'est-ce qui est indispensable pour comprendre le budget, identifier les marges et repérer les leviers de négociation ?", keywords:["décomposition des coûts"], options:["Générateur de règlement", "Décomposition des coûts", "Analyse du travail et des charges", "Leviers d'optimisation"], reponse:"Décomposition des coûts." },
+    { texte:"Quel est le nom de ce qui permet de voir la répartition en % de la décomposition des coûts ?", keywords:["Structure économique"], options:["Analyse du travail et des charges", "Négociation", "Projet de com.", "Structure économique"], reponse:"Cahier des charges" },
+    { texte:"Qu'est-ce qui permet d’évaluer objectivement la valeur produite, comprendre ou se situe les vrais coûts et démontrer que la négociation ne peut pas être un réduction arbitraire ?", keywords:["Analyse du travail et des charges"], options:["Analyse du travail et des charges", "Négociation", "Projet de com.", "Structure économique"], reponse:"Analyse du travail et des charges." },
+    { texte:"Quel est le nom de l'étape en un mot où on donne forme à la négociation, aligne les visions avant d'entrer dans les discussions etc ?", keywords:["cadrage"], options:["Analyse", "Cadrage", "Charges", "Contractualisation"], reponse:"Cadrage."}
+
+  ],
+
+    "Le diagnostic de l'annonceur et de sa communication": [
+    { texte:"Le diagnostic est avant tout une phase de quoi ?", keywords:["analyse"], options:["Analyse", "Création", "Diffusion", "Production"], reponse:"Le diagnostic est une phase d’analyse et d’audit de l’existant." },
+    { texte:"Quel outil est utilisé pour mettre en évidence les forces, faiblesses, opportunités et menaces ?", keywords:["swot"], options:["SWOT", "PESTEL", "Benchmark", "Brainstorming"], reponse:"SWOT" },
+    { texte:"Le diagnostic permet principalement d’identifier quoi ?", keywords:["problème"], options:["Un problème de communication", "Un budget", "Un slogan", "Un planning"], reponse:"Un problème de communication." },
+    { texte:"À quels éléments le problème identifié peut-il être lié ?", keywords:["Image"], options:["Image, notoriété ou comportement", "Prix et distribution", "Logistique et production", "Ressources humaines"], reponse:"Image, notoriété ou comportement." },
+    { texte:"À quoi servent le diagnostic et le problème de communication ?", keywords:["objectifs"], options:["Fixer les objectifs de communication", "Créer un logo", "Choisir un nom de marque", "Définir les prix"], reponse:"Fixer les objectifs de communication" }
+  ],
+
+    "La formulation du problème de communication de l’annonceur": [
+    { texte:"Une fois le diagnostic établi, que doit-on faire en priorité ?", keywords:["formulation", "problème", "communication"], options:[ "Formuler clairement le problème de communication", "Choisir les moyens de communication", "Lancer la campagne", "Définir le budget"], reponse:"Formuler clairement le problème de communication" },
+    { texte:"Dans quels éléments le problème de communication doit-il être recherché ?", keywords:["éléments", "fondamentaux", "communication"], options:["Les éléments fondamentaux de la communication", "Les résultats commerciaux", "Les contraintes budgétaires", "Les outils digitaux"], reponse:"Les éléments fondamentaux de la communication" },
+    { texte:"Laquelle de ces situations correspond à une erreur fréquente ?", keywords:["confusion", "marketing", "communication"], options:["Confondre problème commercial et problème de communication", "Identifier un problème d’image", "Analyser la notoriété de la marque", "Formuler un objectif de communication"], reponse:"Confondre problème commercial et problème de communication" },
+    { texte:"Quelle formulation constitue une erreur dans un problème de communication ?", keywords:["moyens", "réseaux", "communication"], options:["Comment communiquer sur les réseaux sociaux ?", "Comment améliorer l’image de la marque ?", "Comment réduire l’écart entre image voulue et perçue ?", "Comment renforcer la notoriété de la marque ?"], reponse:"Comment communiquer sur les réseaux sociaux ?" },
+    { texte:"Quelle structure doit respecter une formulation correcte du problème de communication ?", keywords:["comment", "alors que", "paradoxe"], options:[  "Comment… alors que…", "Pourquoi… donc…", "Si… alors…", "Qui… quand…"], reponse:"Comment… alors que…" }
+  ],
+  
+    "La communication non marchande": [
+    {texte: "Quel est l’objectif principal de la communication commerciale ?", keywords: ["communication", "commerciale", "consommateurs"], options:["S’adresser aux consommateurs, prospects et clients", "Modifier des comportements sociaux", "Sensibiliser à des causes d’intérêt général", "Améliorer le vivre-ensemble"], reponse: "S’adresser aux consommateurs, prospects et clients"},
+    {texte: "Quels domaines relèvent de la communication non marchande ?", keywords: ["santé", "culture", "environnement"],options:["La santé, la culture, l’aide humanitaire et l’environnement","La grande distribution et le luxe","Les services financiers","Les nouvelles technologies"], reponse: "La santé, la culture, l’aide humanitaire et l’environnement"},
+
+{texte: "Quels sont les deux types de communication non marchande ?",
+  keywords: ["communication", "sociale", "publique"],
+  options: ["La communication sociale et la communication publique", "La communication interne et externe", "La communication digitale et événementielle", "La communication institutionnelle et commerciale"], reponse: "La communication sociale et la communication publique"},
+
+{texte: "Qui sont les annonceurs de la communication sociale ?", keywords: ["associations", "ONG", "syndicats"], options: ["Les associations, les ONG et les syndicats professionnels", "Les entreprises privées", "Les agences de communication", "Les médias"], reponse: "Les associations, les ONG et les syndicats professionnels"},
+
+{texte: "Pourquoi les dépenses de communication doivent-elles être justifiées dans la communication non marchande ?", keywords: ["dépenses", "contribuables", "crédibilité"], options: ["Parce qu’il s’agit de l’argent des contribuables ou des adhérents", "Parce que les campagnes sont toujours coûteuses", "Parce que les prestataires l’exigent", "Parce que la loi l’impose systématiquement"], reponse: "Parce qu’il s’agit de l’argent des contribuables ou des adhérents"},
+
+{texte: "Pourquoi la formulation du problème de communication est-elle délicate en communication institutionnelle ?", keywords: ["problème", "comportements", société"], options: ["Parce qu’elle concerne des problèmes sociaux sensibles et des comportements difficiles à faire évoluer", "Parce qu’elle vise uniquement les jeunes", "Parce qu’elle repose sur des objectifs commerciaux", "Parce qu’elle ne suit aucune démarche stratégique"], reponse: "Parce qu’elle concerne des problèmes sociaux sensibles et des comportements difficiles à faire évoluer"}
+  ],
+
+      "La prise en compte d’éléments stratégiques pour assurer le pilotage": [
+{texte: "Quels sont les objectifs principaux de la communication non marchande ?", keywords: ["objectifs", "communication", "association", "publique", "sociale"],
+ options: ["Faire connaître, informer, mobiliser, faire évoluer les comportements et promouvoir les projets", "Augmenter les ventes et fidéliser les clients",
+    "Choisir des supports publicitaires", "Réduire les coûts de communication"], reponse: "Faire connaître, informer, mobiliser, faire évoluer les comportements et promouvoir les projets"},
+
+{texte: "Pourquoi une association ou collectivité doit-elle être connue et reconnue ?", keywords: ["faire connaître", "faire reconnaître", "crédibilité", "citoyens"], options: ["Pour être crédible aux yeux des citoyens et légitimer ses actions", "Pour obtenir des subventions automatiquement", "Pour augmenter les ventes", "Pour attirer des sponsors privés uniquement"], reponse: "Pour être crédible aux yeux des citoyens et légitimer ses actions"},
+
+{texte: "Quel est le rôle de l’information dans la communication non marchande ?", keywords: ["informer", "activités", "justifier", "explication"], options: [
+"Justifier et expliquer les différentes activités de la collectivité ou de l’association", "Promouvoir uniquement le produit de l’association", "Vendre des produits ou services", "Réduire les coûts de communication"], reponse: "Justifier et expliquer les différentes activités de la collectivité ou de l’association"},
+
+{texte: "Quel objectif spécifique poursuit la communication sociale d’une ONG ?", keywords: ["ONG", "communication sociale", "fonds", "adhérents", "bénévoles"], options: ["Collecter des fonds, recruter des adhérents et/ou des bénévoles", "Promouvoir uniquement des produits commerciaux", "Informer sur les horaires d’ouverture",
+ "Créer un site web"], reponse: "Collecter des fonds, recruter des adhérents et/ou des bénévoles"},
+
+{texte: "Quelles sont les principales cibles de la communication publique ?", keywords: ["communication publique", "cibles", "habitants", "responsables", "journalistes"], options: ["Les habitants, le personnel salarié, les responsables d’entreprises et associations, les journalistes et partenaires", "Les adhérents d’une ONG uniquement", "Les clients et prospects commerciaux", "Les fournisseurs et prestataires privés uniquement"], reponse: "Les habitants, le personnel salarié, les responsables d’entreprises et associations, les journalistes et partenaires"},
+
+{texte: "Quelles sont les principales cibles de la communication sociale ?", keywords: ["communication sociale", "cibles", "adhérents", "donateurs", "personnes aidées"], options: ["Les adhérents, les donateurs, les personnes aidées, les élus, les chefs d’entreprise, les journalistes et leaders d’opinion", "Les habitants d’une commune uniquement", "Les consommateurs potentiels", "Les partenaires financiers privés uniquement"], reponse: "Les adhérents, les donateurs, les personnes aidées, les élus, les chefs d’entreprise, les journalistes et leaders d’opinion"},
+
+{texte: "Qu’est-ce que la promesse dans la stratégie créative d’une communication non marchande ?", keywords: ["promesse", "stratégie créative", "idée", "message"], options: ["L’idée à faire passer, très percutante, qui met en avant un attribut fort de l’organisation", "Le choix du support visuel uniquement", "Le ton humoristique de la campagne", "Le budget alloué"], reponse: "L’idée à faire passer, très percutante, qui met en avant un attribut fort de l’organisation"},
+
+{texte: "Qu’est-ce que la justification ou le concept dans la stratégie créative ?", keywords: ["justification", "concept", "preuve", "promesse"], options: ["La preuve de la promesse et la mise en œuvre du message", "Le choix des couleurs uniquement", "La rédaction du budget", "Le planning de diffusion"], reponse: "La preuve de la promesse et la mise en œuvre du message"},
+
+{texte: "Quel rôle joue le ton dans la communication non marchande ?", keywords: ["ton", "ambiance", "atmosphère", "créativité"], options: ["Créer l’ambiance et l’atmosphère du message", "Déterminer uniquement le budget de communication", "Choisir le prestataire", "Définir le calendrier"], reponse: "Créer l’ambiance et l’atmosphère du message"},
+
+{texte: "Quelles sont les contraintes créatives dans la communication non marchande ?", keywords: ["contraintes", "créatives", "limites", "élections"], options: ["Elles limitent la créativité pour rester conforme aux choix stratégiques et peuvent être liées aux avis des parties prenantes", "Elles concernent uniquement le budget", "Elles sont définies par la taille de l’association", "Elles portent uniquement sur le choix des supports"], reponse: "Elles limitent la créativité pour rester conforme aux choix stratégiques et peuvent être liées aux avis des parties prenantes"}
+        
+            "La mise en œuvre des moyens propres à la communication non marchande": [
+{texte: "Quel est le principal objectif de la communication publique en termes d’identification ?", keywords: ["communication publique", "identité", "territoire"], options: ["Créer une identité pour le territoire", "Vendre des produits locaux", "Réduire les coûts de communication", "Augmenter les recettes fiscales"], reponse: "Créer une identité pour le territoire"},
+
+{texte: "Quel est l’élément fort d’identification dans une charte graphique ?", keywords: ["logo"], options: ["Le logo", "La signature électronique", "La couleur du papier", "Le format du document"], reponse: "Le logo"},
+
+{texte: "Quel rôle jouent les grands médias dans la communication publique et sociale ?", keywords: ["tarifs", "gratuité", "contraintes"], options: ["Ils bénéficient de tarifs réduits ou de gratuité mais avec des contraintes de calendrier", "Ils sont gratuits sans aucune restriction", "Ils ne sont pas utilisés", "Ils remplacent tous les autres moyens de communication"], reponse: "Ils bénéficient de tarifs réduits ou de gratuité mais avec des contraintes de calendrier"},
+
+{texte: "Quel est le rôle des magazines dans la communication publique ?", keywords: ["efficace", "gratuit", "financé en partie", "périodicité"], options: ["Outil efficace, gratuit ou financé en partie, pour atteindre la population avec périodicité régulière", "Outil uniquement destiné aux journalistes", "Support payant sans subvention", "Outil numérique uniquement"], reponse: "Outil efficace, gratuit ou financé en partie, pour atteindre la population avec périodicité régulière"},
+
+{texte: "Comment les associations utilisent-elles la presse ?", keywords: ["aléatoire", "peu de moyens", "international"], options: ["Avec une périodicité aléatoire et peu de moyens, parfois à rayonnement international", "Avec un calendrier rigide imposé par l’État", "Uniquement via des articles sponsorisés", "En achetant toujours des pages publicitaires"], reponse: "Avec une périodicité aléatoire et peu de moyens, parfois à rayonnement international"},
+
+{texte: "Quels types de campagnes achètent les associations dans la presse spécialisée ?", keywords: ["cibées", "visée"], options: ["Campagnes ciblées selon la population visée (jeunes, femmes, cadres…)", "Campagnes nationales obligatoires", "Campagnes uniquement dans les journaux gratuits", "Campagnes publicitaires commerciales"], reponse: "Campagnes ciblées selon la population visée (jeunes, femmes, cadres…)"},
+
+{texte: "Quels médias sont très utilisés par l’État pour les grandes campagnes nationales ?", keywords: ["télévision", "radio"], options: ["La télévision et la radio", "Les magazines locaux uniquement", "Les affiches urbaines seulement", "Les réseaux sociaux uniquement"], reponse: "La télévision et la radio"},
+
+{texte: "Quel est l’avantage principal de l’affichage dans la communication publique ?", keywords: ["moins informées"], options: ["Atteindre les populations les moins informées", "Remplacer tous les autres médias", "Réduire le budget de communication", "Informer uniquement les entreprises"], reponse: "Atteindre les populations les moins informées"},
+
+{texte: "Quels outils numériques utilisent les collectivités pour la proximité avec les citoyens ?", keywords: ["sites vitrines", "réseaux sociaux", "applications", "newsletter", "webtélé"], options: ["Sites vitrine, réseaux sociaux, applications mobiles, newsletters, webtélé", "Télévision locale uniquement", "Courriers postaux seulement", "Magazines bimensuels exclusivement"], reponse: "Sites vitrine, réseaux sociaux, applications mobiles, newsletters, webtélé"},
+
+{texte: "Quels supports utilisent les associations pour communiquer lors d’événements ?", keywords: ["flyers", "dépliants", "manifestations"], options: ["Flyers et dépliants distribués lors de manifestations ou dans lieux adaptés", "Télévision nationale exclusivement", "Radio locale uniquement", "Sites gouvernementaux"],  reponse: "Flyers et dépliants distribués lors de manifestations ou dans lieux adaptés"},
+
+{texte: "Quels indicateurs mesurent la pertinence des campagnes institutionnelles ?", keywords: ["taux de mémorisation", "agrément", "incitation", "post-test publicitaire"], options: ["Taux de mémorisation, score d’agrément, score d’incitation, post-test publicitaire", "Budget dépensé uniquement", "Nombre de journalistes contactés", "Nombre de partenaires associés"], reponse: "Taux de mémorisation, score d’agrément, score d’incitation, post-test publicitaire"},
+
+{texte: "Quels indicateurs mesurent l’efficacité globale des campagnes institutionnelles ?", keywords: ["audience", "retombées économiques", "viral"], options: ["Audience utile, retombées économiques locales, viralité de la campagne", "Seul le nombre de likes sur les réseaux sociaux", "Nombre de supports distribués  uniquement", "Budget consommé par média"], reponse: "Audience utile, retombées économiques locales, viralité de la campagne"}
+
+ 
+    "La communication événementielle": [
+{texte:"Quel est l’objectif principal de la communication événementielle ?", keywords:["relations","proximité","complicité","publics","cibles"], options:["Développer des relations de complicité et de proximité avec les publics cibles","Vendre des produits uniquement","Remplacer la publicité classique","Réduire les coûts de communication"], reponse:"Développer des relations de complicité et de proximité avec les publics cibles"},
+
+{texte:"Quels sont les objectifs généraux de la communication événementielle ?", keywords:["proximité","notoriété","image","fédérer","médias"], options:["Développer la proximité, accroître la notoriété, véhiculer une image valorisante, fédérer le personnel, susciter l’intérêt des médias","Créer uniquement un logo","Vendre des produits commerciaux","Réduire le budget marketing"], reponse:"Développer la proximité, accroître la notoriété, véhiculer une image valorisante, fédérer le personnel, susciter l’intérêt des médias"},
+
+{texte:"Quels publics peuvent être ciblés par la communication événementielle ?", keywords:["cible","interne","externe","salariés","grand public","clients","partenaires","journalistes"], options:["La cible interne (salariés, membres d’équipe) et la cible externe (grand public, clients, partenaires, journalistes)","Uniquement les clients existants","Uniquement les partenaires commerciaux","Uniquement les médias"], reponse:"La cible interne (salariés, membres d’équipe) et la cible externe (grand public, clients, partenaires, journalistes)"},
+
+{texte:"Quels sont les exemples d’événements destinés à une cible externe ?", keywords:["portes ouvertes","inaugurations","séminaires","salons","spectacles","manifestations"], options:["Journées portes ouvertes, inaugurations, séminaires, salons professionnels, spectacles, manifestations populaires","Séminaires internes uniquement","Réunions professionnelles « au vert » seulement","Team building et activités sportives internes"], reponse:"Journées portes ouvertes, inaugurations, séminaires, salons professionnels, spectacles, manifestations populaires"},
+
+{texte:"Quels sont les exemples d’événements destinés à une cible interne ?", keywords:["récompenses","fêtes","activités","journée d’étude","séminaires","team building"], options:["Remise de récompenses, fêtes, activités ludiques et sportives, journées d’étude, séminaires, team building","Inauguration de locaux uniquement","Salons professionnels et expositions","Voyages de presse"], reponse:"Remise de récompenses, fêtes, activités ludiques et sportives, journées d’étude, séminaires, team building"},
+
+{texte:"Qui peut prendre en charge l’organisation d’un événement ?", keywords:["agence","spécialisée","professionnels","créatifs"], options:["Une agence spécialisée composée de professionnels expérimentés et de créatifs","Uniquement le personnel interne","Uniquement le service marketing","Les clients de l’entreprise"], reponse:"Une agence spécialisée composée de professionnels expérimentés et de créatifs"},
+
+{texte:"Quels points doivent être pris en compte par le chargé de communication dans la mise en place d’un événement ?", keywords:["date","lieu","convives","budget","tâches","prestataires"], options:["Date et lieu, estimation du nombre de convives, budget, tâches internes et à confier à des prestataires","Uniquement le choix du lieu","Uniquement la décoration","Uniquement le choix de l’horaire"], reponse:"Date et lieu, estimation du nombre de convives, budget, tâches internes et à confier à des prestataires"},
+
+{texte:"Quels critères influencent le choix du lieu d’un événement ?", keywords:["type","capacité","salle","amphithéâtre","plein air"], options:["Type d’événement et capacité, salle équipée ou vide, amphithéâtre, espace en plein air","Proximité du parking uniquement","Budget publicitaire uniquement","Disponibilité des sponsors uniquement"], reponse:"Type d’événement et capacité, salle équipée ou vide, amphithéâtre, espace en plein air"},
+
+{texte:"Pourquoi les règles juridiques sont-elles importantes pour un événement ?", keywords:["durée du travail","conventions","autorisation","domaine public"], options:["Elles encadrent la durée de travail, les conventions, et imposent des autorisations pour les événements dans le domaine public","Elles fixent le prix des billets d’entrée","Elles déterminent la couleur de la décoration","Elles remplacent la planification budgétaire"], reponse:"Elles encadrent la durée de travail, les conventions, et imposent des autorisations pour les événements dans le domaine public"},
+
+{texte:"Quels prestataires spécialisés peuvent intervenir pour un événement ?", keywords:["traiteur","animateur","décorateur","logistique","photographe","stands","chapiteaux"], options:["Traiteur, animateur, décorateur, chargé de logistique, photographe, loueur/installateur de stands et chapiteaux","Uniquement le service communication interne","Les médias partenaires uniquement","Les sponsors financiers uniquement"], reponse:"Traiteur, animateur, décorateur, chargé de logistique, photographe, loueur/installateur de stands et chapiteaux"}
+
+    "Les relations publiques et les relations presse": [
+{texte:"Quel est l’objectif principal des relations publiques ?", keywords:["relations","sympathie","publics","image","organisation"], options:["Développer des relations de sympathie avec ses différents publics et valoriser l’image de l’organisation","Augmenter les ventes de produits","Réduire les coûts marketing","Créer un site internet"], reponse:"Développer des relations de sympathie avec ses différents publics et valoriser l’image de l’organisation"},
+
+{texte:"Quel est l’objectif principal des relations presse ?", keywords:["journalistes","confiance","sympathie","rédactionnels","valorisants"], options:["Développer des relations de confiance et de sympathie avec les journalistes et susciter des rédactionnels valorisants","Envoyer des newsletters uniquement","Acheter des espaces publicitaires","Organiser des salons professionnels"], reponse:"Développer des relations de confiance et de sympathie avec les journalistes et susciter des rédactionnels valorisants"},
+
+{texte:"Quels moyens sont utilisés pour les relations publiques ?", keywords:["portes ouvertes","visites","interventions","cocktails","tourisme"], options:["Organisation d’événements comme portes ouvertes, visites d’entreprise, interventions scolaires, cocktails, tourisme d’entreprise","Envoi de communiqués de presse uniquement","Conférences de presse uniquement","Campagnes publicitaires en ligne"], reponse:"Organisation d’événements comme portes ouvertes, visites d’entreprise, interventions scolaires, cocktails, tourisme d’entreprise"},
+
+{texte:"Quels moyens sont utilisés pour les relations presse ?", keywords:["communiqué","dossier","conférence","cocktail","journalistes"], options:["Documents adressés aux journalistes et rencontres avec eux, comme communiqués, dossiers de presse, conférences et cocktails de presse","Organisation d’événements internes uniquement","Marketing direct","Publicité télévisée"], reponse:"Documents adressés aux journalistes et rencontres avec eux, comme communiqués, dossiers de presse, conférences et cocktails de presse"},
+
+{texte:"Comment mesure-t-on l’efficacité des relations publiques et des relations presse ?", keywords:["retombées","média","notoriété","image","satisfaction","invitation"], options:["En collectant les retombées médiatiques, en mesurant le taux de retour sur invitations, le degré de satisfaction, et l’évolution de la notoriété et de l’image","En comptant uniquement le nombre de participants à un événement","En suivant les ventes de produits uniquement","En surveillant les réseaux sociaux sans autres indicateurs"], reponse:"En collectant les retombées médiatiques, en mesurant le taux de retour sur invitations, le degré de satisfaction, et l’évolution de la notoriété et de l’image"}
+
+      "Le communiqué et le dossier de presse": [
+{texte:"Quelle est la fonction principale d’un communiqué de presse ?", keywords:["annoncer","événement","produit","inauguration"], options:["Annoncer un événement comme le lancement d’un produit ou l’inauguration de nouveaux locaux","Vendre directement un produit","Remplacer la publicité en ligne","Promouvoir uniquement la marque"], reponse:"Annoncer un événement comme le lancement d’un produit ou l’inauguration de nouveaux locaux"},
+{texte:"Quand un dossier de presse est-il associé à un communiqué de presse ?", keywords:["données","historique","information","journaliste"], options:["Lorsqu’un événement est important et nécessite des informations supplémentaires comme l’historique ou des données pour le journaliste","Quand le communiqué est envoyé uniquement par email","Quand l’entreprise veut vendre un produit","Lorsque le communiqué est destiné à un blog"], reponse:"Lorsqu’un événement est important et nécessite des informations supplémentaires comme l’historique ou des données pour le journaliste"},
+{texte:"Quelles questions doivent être couvertes dans un communiqué de presse ?", keywords:["quoi","qui","quand","où","comment","pourquoi"], options:["Quoi, Qui, Quand, Où, Comment, Pourquoi","Comment, Combien, Quel prix","Pourquoi, Quand, Combien","Qui, Quoi, Combien, Pour qui"], reponse:"Quoi, Qui, Quand, Où, Comment, Pourquoi"},
+{texte:"Quelles sont les normes de présentation d’un communiqué de presse ?", keywords:["texte","courte","en-tête","logo","nom","contact"], options:["Texte court avec en-tête 'communiqué de presse', logo et nom de l’émetteur, contact presse mentionné","Texte long avec présentation graphique uniquement","Texte court sans contact ni logo","Texte avec images uniquement"], reponse:"Texte court avec en-tête 'communiqué de presse', logo et nom de l’émetteur, contact presse mentionné"},
+{texte:"Quels moyens sont les plus utilisés pour envoyer un communiqué ou un dossier de presse ?", keywords:["courrier","électronique","personnalisé","rapide","coût"], options:["Courrier électronique personnalisé, rapide et peu coûteux","Courrier postal uniquement","Par téléphone uniquement","Via réseaux sociaux uniquement"], reponse:"Courrier électronique personnalisé, rapide et peu coûteux"},
+{texte:"Pourquoi est-il important de personnaliser l’envoi d’un communiqué ou dossier de presse ?", keywords:["journaliste","destinataire","information","directement"], options:["Pour adresser directement l’information à chaque journaliste concerné","Pour envoyer le même message à tout le monde","Pour économiser du temps","Pour éviter de rédiger un communiqué"], reponse:"Pour adresser directement l’information à chaque journaliste concerné"},
+{texte:"Quels types de contenus peut-on inclure dans un dossier de presse ?", keywords:["texte","interview","portrait","historique","annexes","photos","graphiques","lexique"], options:["Textes variés, interviews, portraits, historique, annexes comme photos, graphiques, lexique","Texte uniquement","Images uniquement","Bullet points sans contenu détaillé"], reponse:"Textes variés, interviews, portraits, historique, annexes comme photos, graphiques, lexique"},
+{texte:"Quelle est la taille recommandée d’un dossier de presse pour qu’il soit consulté par les journalistes ?", keywords:["dix","pages","limité"], options:["Limitée à une dizaine de pages","Plus de cinquante pages","Un seul feuillet","Indéfinie"], reponse:"Limitée à une dizaine de pages"},
+{texte:"Quels avantages offre l’envoi électronique d’un dossier de presse par rapport au papier ?", keywords:["photos","fichiers","texte","images","réutilisables","journalistes"], options:["Permet de proposer un plus grand choix de photos et mettre à disposition des journalistes des fichiers textes et images réutilisables","Permet uniquement d’envoyer un PDF statique","Remplace le communiqué de presse","Évite de rédiger un chapeau"], reponse:"Permet de proposer un plus grand choix de photos et mettre à disposition des journalistes des fichiers textes et images réutilisables"}
+
+
+"Les autres moyens de la communication événementielle": [
+{texte:"Qu’est-ce que le parrainage (sponsoring) dans la communication événementielle ?", keywords:["soutien","financier","matériel","humain","promotion","contrat"], options:["Un soutien financier, matériel ou humain apporté à une personne ou organisation en échange de promotion selon un contrat","Un soutien apporté sans aucune contrepartie promotionnelle","Une forme de publicité uniquement digitale","Une activité réservée aux associations"], reponse:"Un soutien financier, matériel ou humain apporté à une personne ou organisation en échange de promotion selon un contrat"},
+{texte:"Quel est l’objectif principal pour l’annonceur dans le parrainage ?", keywords:["acquérir","clients","augmenter","chiffre","affaires","retombées","commerciales"], options:["Acquérir de nouveaux clients et augmenter le chiffre d’affaires en générant des retombées commerciales à court terme","Améliorer uniquement l’image de l’entreprise à long terme","Participer à des actions culturelles sans bénéfice direct","Offrir des cadeaux aux participants"], reponse:"Acquérir de nouveaux clients et augmenter le chiffre d’affaires en générant des retombées commerciales à court terme"},
+{texte:"Qu’est-ce que le mécénat et en quoi diffère-t-il du parrainage ?", keywords:["soutien","personne","organisation","sans","contrepartie","don","image"], options:["Soutien apporté à une personne ou organisation sans contrepartie promotionnelle, considéré comme un don et apportant des effets d’image","Soutien financier avec obligation de promotion immédiate","Une publicité digitale ciblée","Un partenariat commercial avec retour sur investissement à court terme"], reponse:"Soutien apporté à une personne ou organisation sans contrepartie promotionnelle, considéré comme un don et apportant des effets d’image"},
+{texte:"Quels types d’événements sont regroupés dans les salons et expositions ?", keywords:["manifestations","professionnels","commercial","grand","public","thème"], options:["Manifestations qui regroupent des professionnels dans un but commercial, souvent ouvertes au grand public et organisées autour d’un thème","Événements uniquement internes à l’entreprise","Réunions publiques sans objectif commercial","Conférences académiques uniquement"], reponse:"Manifestations qui regroupent des professionnels dans un but commercial, souvent ouvertes au grand public et organisées autour d’un thème"},
+{texte:"Quelles sont les principales finalités pour les entreprises participant à des foires ou salons ?", keywords:["conclure","contrats","faire","connaître","produit","renforcer","image","notoriété","essayer","fichier","contacts"], options:["Conclure des contrats, se faire connaître, renforcer l’image et la notoriété, faire essayer le produit ou service et enrichir le fichier de contacts","Organiser uniquement des conférences","Se concentrer sur la publicité digitale","Distribuer des cadeaux sans objectif commercial"], reponse:"Conclure des contrats, se faire connaître, renforcer l’image et la notoriété, faire essayer le produit ou service et enrichir le fichier de contacts"},
+{texte:"Quelle organisation représente les acteurs des foires, salons, congrès et événements sportifs en France ?", keywords:["UNIMEV","Union","française","métiers","événement","organisateurs","prestataires"], options:["UNIMEV, Union française des métiers de l’événement, représentant organisateurs de foires, salons, congrès et prestataires","Chambre de commerce","Fédération des associations locales","Office du tourisme national"], reponse:"UNIMEV, Union française des métiers de l’événement, représentant organisateurs de foires, salons, congrès et prestataires"}
+  ],
+};
+  
+let questions=[], index=0, score=0, maxScore=0, currentAnswer="";
+
+const chat = document.getElementById("chat");
+const input = document.getElementById("userInput");
+const scoreDiv = document.getElementById("score");
+const optionsContainer = document.getElementById("optionsContainer");
+
+function addMessage(text,sender){
+  const div = document.createElement("div");
+  div.className = "message "+sender;
+  div.innerText = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function startCourse(){
+  const course = document.getElementById("courseSelect").value;
+  if(!course) return alert("Choisis un cours 🙂");
+  chat.innerHTML = ""; optionsContainer.innerHTML="";
+  score = 0; index = 0; currentAnswer = "";
+  questions = courses[course]; maxScore = questions.length;
+  addMessage("On commence 💪. Écris ta réponse.", "bot");
+  askQuestion();
+}
+
+function askQuestion(){
+  if(index >= questions.length){ showFinalScore(); return; }
+  currentAnswer="";
+  const q = questions[index];
+  addMessage("❓ "+q.texte, "bot");
+  input.style.display="inline-block";
+  optionsContainer.innerHTML="";
+}
+
+function finishAnswer(){
+  if(index>=questions.length) return;
+  const q = questions[index];
+  const text = input.value.trim().toLowerCase();
+  if(!text) return;
+  addMessage(input.value,"user");
+  input.value="";
+  
+  // Vérification mots-clés
+  const words = text.split(/\s+/);
+  let hits=0;
+  q.keywords.forEach(k=>{ if(words.includes(k.toLowerCase())) hits++; });
+
+  if(hits === q.keywords.length){
+    addMessage("Bravo ✅ tu as tout trouvé !\n"+q.reponse,"bot");
+    score++;
+    index++;
+    updateScore();
+    setTimeout(askQuestion,500);
+  } else {
+    addMessage("Pas tout à fait, essayons de corriger avec des options !","bot");
+    // passer en mode options
+    showOptions(q);
+  }
+}
+
+function showOptions(q){
+  input.style.display="none";
+  optionsContainer.innerHTML="";
+  q.options.forEach((opt,i)=>{
+    const btn = document.createElement("button");
+    btn.className="optionBtn";
+    btn.innerText = opt;
+    btn.onclick = ()=>{
+      if(opt === q.reponse){
+        score++;
+        addMessage("Bien joué ✅\n"+q.reponse,"bot");
+      } else {
+        addMessage("C'était pas ça 💙\n"+q.reponse,"bot");
+}
+      index++;
+      updateScore();
+      optionsContainer.innerHTML="";
+      setTimeout(askQuestion,500);
+    };
+    optionsContainer.appendChild(btn);
+  });
+}
+
+function updateScore(){
+  const ratio = score / maxScore;
+  let color="red", label="Tu peux progresser 💙";
+  if(ratio>0.85){color="green"; label="Tu es prête pour le partiel 😎";}
+  else if(ratio>0.6){color="gold"; label="Presque prête 💛";}
+  else if(ratio>0.3){color="orange"; label="En progrès 🧡";}
+  scoreDiv.innerHTML = `Niveau du cours : <span style="color:${color}">${label}</span>`;
+}
+
+function showFinalScore(){
+  updateScore();
+  addMessage("Fin du cours 🎉 Tu peux être fière de toi.","bot");
+}
+</script>
+</body>
+</html>
